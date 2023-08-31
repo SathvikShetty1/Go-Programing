@@ -6,41 +6,30 @@ import (
 	"time"
 )
 
-func worker(id int, checkpoint chan bool, resume chan bool, wg *sync.WaitGroup) {
-	defer wg.Done()
-	fmt.Printf("Worker %d: Starting\n", id)
-	time.Sleep(time.Duration(id) * time.Second)
-
-	checkpoint <- true 
-
-	<-resume 
-
-	fmt.Printf("Worker %d: Resumed\n", id)
-}
-
 func main() {
-	numWorkers := 3
-	checkpoint := make(chan bool)
-	resume := make(chan bool)
-	wg := sync.WaitGroup{}
+	var wg sync.WaitGroup
+	var num int
+	fmt.Println("Enter the number of workers: ")
+	fmt.Scan(&num)
+	start := make(chan struct{})
+	done := make(chan struct{})
 
-	for i := 1; i <= numWorkers; i++ {
+	for i := 1; i <= num; i++ {
 		wg.Add(1)
-		go worker(i, checkpoint, resume, &wg)
+		go func(id int) {
+			defer wg.Done()
+			<-start
+			fmt.Printf("Worker %d reached the checkpoint\n", id)
+			time.Sleep(time.Second)
+			fmt.Printf("Worker %d completed its work\n", id)
+		}(i)
 	}
 
-
-	for i := 0; i < numWorkers; i++ {
-		<-checkpoint
-	}
-
-	fmt.Println("All workers have reached the checkpoint")
-
-	
-	for i := 0; i < numWorkers; i++ {
-		resume <- true
-	}
+	fmt.Println("Starting workers...")
+	close(start)
 
 	wg.Wait()
-	fmt.Println("All workers have resumed")
+
+	close(done)
+	fmt.Println("All Workers completed their work...")
 }
