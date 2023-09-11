@@ -8,38 +8,42 @@ import (
 )
 
 type Post struct {
-	UserID int `json:"userId"`
-
-	ID    int    `json:"id"`
-	Title string `json:"title"`
-	Body  string `json:"body"`
+	UserID int    `json:"userId"`
+	ID     int    `json:"id"`
+	Title  string `json:"title"`
+	Body   string `json:"body"`
 }
 
 func main() {
+	var postID int
+	fmt.Print("Enter the Post ID: ")
+	fmt.Scan(&postID)
 
-	url := "https://jsonplaceholder.typicode.com/posts/1"
-	resp, err := http.Get(url)
+	url := fmt.Sprintf("https://jsonplaceholder.typicode.com/posts/%d", postID)
+
+	response, err := http.Get(url)
 	if err != nil {
-		fmt.Println("Error:", err)
+		fmt.Printf("HTTP GET request failed: %s\n", err)
 		return
 	}
-	defer resp.Body.Close()
 
-	body, err := ioutil.ReadAll(resp.Body)
+	defer response.Body.Close()
+
+	body, err := ioutil.ReadAll(response.Body)
 	if err != nil {
-		fmt.Println("Error:", err)
+		fmt.Printf("Failed to read response body: %s\n", err)
 		return
 	}
 
 	var post Post
 	err = json.Unmarshal(body, &post)
 	if err != nil {
-		fmt.Println("Error:", err)
+		fmt.Printf("Failed to parse JSON: %s\n", err)
 		return
 	}
 
-	fmt.Printf("Post ID: %d\n", post.ID)
-	fmt.Printf("User ID: %d\n", post.UserID)
+	fmt.Printf("UserID: %d\n", post.UserID)
+	fmt.Printf("ID: %d\n", post.ID)
 	fmt.Printf("Title: %s\n", post.Title)
 	fmt.Printf("Body: %s\n", post.Body)
 }
